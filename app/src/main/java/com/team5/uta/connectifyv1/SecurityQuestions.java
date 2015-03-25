@@ -2,7 +2,6 @@ package com.team5.uta.connectifyv1;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -53,8 +52,10 @@ public class SecurityQuestions extends Activity implements AdapterView.OnItemSel
         next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent mapActivity = new Intent(SecurityQuestions.this, MapActivity.class);
-                startActivity(mapActivity);
+                Intent interestActivity = new Intent(SecurityQuestions.this, AddInterestActivity.class);
+                User user = (User)getIntent().getSerializableExtra("user");
+                interestActivity.putExtra("user", user);
+                startActivity(interestActivity);
             }
         });
 
