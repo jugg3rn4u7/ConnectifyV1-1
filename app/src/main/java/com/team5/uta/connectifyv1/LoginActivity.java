@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -14,14 +15,19 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.team5.uta.connectifyv1.adapter.IMyCallbackInterface;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.sql.ResultSet;
 import java.util.Random;
 
 public class LoginActivity extends ActionBarActivity {
 
     public static final String PREFS_NAME = "UserData";
-    public DBConnection db = null;
     public ResultSet output = null;
+    public HTTPWrapper request = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,21 +84,26 @@ public class LoginActivity extends ActionBarActivity {
 
                     try {
 
-                        db = new DBConnection();
-                        db.execute("select * from connectifydb.user where user_email='"+ email.getText().toString() +"'", true);
+                        request = new HTTPWrapper(new IMyCallbackInterface() {
+                            @Override
+                            public void onComplete(Object data) throws JSONException {
 
-                        output = (ResultSet)db.getResult();
-                        while (output.next()) {
-                            String email = output.getString("user_email");
-                            if(email.equalsIgnoreCase(uname)) {
-                                Toast.makeText(getApplicationContext(), "Awesome ! You are IN !", Toast.LENGTH_LONG).show();
+                                JSONArray res = (JSONArray)data;
 
-                                Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
-                                startActivity(mapActivity);
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Oops ! Username or Password is wrong !", Toast.LENGTH_LONG).show();
+                                String email = res.getJSONObject(0).get("user_email").toString();
+                                String pwd = res.getJSONObject(0).get("password").toString();
+                                if(email.equalsIgnoreCase(uname) && pwd.equals(password)) {
+                                    Toast.makeText(getApplicationContext(), "Awesome ! You are IN !", Toast.LENGTH_LONG).show();
+
+                                    Intent mapActivity = new Intent(LoginActivity.this, MapActivity.class);
+                                    startActivity(mapActivity);
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Oops ! Username or Password is wrong !", Toast.LENGTH_LONG).show();
+                                }
                             }
-                        }
+
+                        });
+                        request.execute("GET", "http://localhost/connectify/getUserDetails.php", "email=" + email.getText().toString());
 
                     } catch (Exception ex) {
                         ex.printStackTrace();
